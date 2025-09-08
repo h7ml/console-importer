@@ -14,6 +14,8 @@ export const App = () => {
     cssTemplate: 'https://your-cdn.com/{package}@{version}',
     description: '',
   });
+  const [editingProvider, setEditingProvider] = useState<CDNProvider | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     const detectedLang = detectLanguage();
@@ -123,6 +125,50 @@ export const App = () => {
   const removeCustomSource = (providerId: string) => {
     const newProviders = config.providers.filter((p) => p.id !== providerId);
     saveConfig({ ...config, providers: newProviders });
+  };
+
+  const startEditProvider = (provider: CDNProvider) => {
+    setEditingProvider({ ...provider });
+    setShowEditModal(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingProvider(null);
+    setShowEditModal(false);
+  };
+
+  const saveEditedProvider = () => {
+    if (!editingProvider) return;
+
+    // 验证必填字段
+    if (!editingProvider.name.trim()) {
+      alert(lang === 'zh' ? '名称不能为空！' : 'Name cannot be empty!');
+      return;
+    }
+    if (!editingProvider.jsTemplate.trim()) {
+      alert(lang === 'zh' ? 'JS 模板不能为空！' : 'JS template cannot be empty!');
+      return;
+    }
+    if (!editingProvider.cssTemplate.trim()) {
+      alert(lang === 'zh' ? 'CSS 模板不能为空！' : 'CSS template cannot be empty!');
+      return;
+    }
+
+    // 验证模板格式
+    if (!editingProvider.jsTemplate.includes('{package}')) {
+      alert(lang === 'zh' ? 'JS 模板必须包含 {package} 占位符！' : 'JS template must contain {package} placeholder!');
+      return;
+    }
+    if (!editingProvider.cssTemplate.includes('{package}')) {
+      alert(lang === 'zh' ? 'CSS 模板必须包含 {package} 占位符！' : 'CSS template must contain {package} placeholder!');
+      return;
+    }
+
+    const newProviders = config.providers.map((p) => 
+      p.id === editingProvider.id ? editingProvider : p
+    );
+    saveConfig({ ...config, providers: newProviders });
+    cancelEdit();
   };
 
   if (loading) {
@@ -241,6 +287,13 @@ export const App = () => {
                       </div>
 
                       <div className="flex gap-1">
+                        <button
+                          onClick={() => startEditProvider(provider)}
+                          className="p-1 text-blue-400 hover:text-blue-600" 
+                          title={lang === 'zh' ? '编辑' : 'Edit'}
+                        >
+                          ✏️
+                        </button>
                         <button
                           onClick={() => updateProviderPriority(provider.id, 'up')}
                           disabled={index === 0}
@@ -371,6 +424,149 @@ export const App = () => {
           </div>
         </div>
       </div>
+      
+      {/* Edit Provider Modal */}
+      {showEditModal && editingProvider && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {lang === 'zh' ? `编辑 CDN 提供商: ${editingProvider.name}` : `Edit CDN Provider: ${editingProvider.name}`}
+              </h2>
+            </div>
+            
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {lang === 'zh' ? '名称' : 'Name'} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editingProvider.name}
+                  onChange={(e) => setEditingProvider({ ...editingProvider, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={lang === 'zh' ? '输入 CDN 名称' : 'Enter CDN name'}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {lang === 'zh' ? '描述' : 'Description'}
+                </label>
+                <input
+                  type="text"
+                  value={editingProvider.description || ''}
+                  onChange={(e) => setEditingProvider({ ...editingProvider, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={lang === 'zh' ? '输入描述信息' : 'Enter description'}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {lang === 'zh' ? 'JS 模板' : 'JS Template'} <span className="text-red-500">*</span>
+                  <span className="text-xs text-gray-500 ml-2">
+                    {lang === 'zh' ? '使用 {package} 和 {version} 占位符' : 'Use {package} and {version} placeholders'}
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={editingProvider.jsTemplate}
+                  onChange={(e) => setEditingProvider({ ...editingProvider, jsTemplate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://cdn.example.com/{package}@{version}"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {lang === 'zh' ? 'CSS 模板' : 'CSS Template'} <span className="text-red-500">*</span>
+                  <span className="text-xs text-gray-500 ml-2">
+                    {lang === 'zh' ? '使用 {package} 和 {version} 占位符' : 'Use {package} and {version} placeholders'}
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={editingProvider.cssTemplate}
+                  onChange={(e) => setEditingProvider({ ...editingProvider, cssTemplate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://cdn.example.com/{package}@{version}"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {lang === 'zh' ? '基础 URL' : 'Base URL'}
+                </label>
+                <input
+                  type="text"
+                  value={editingProvider.baseUrl || ''}
+                  onChange={(e) => setEditingProvider({ ...editingProvider, baseUrl: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://cdn.example.com"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {lang === 'zh' ? '地区' : 'Region'}
+                  </label>
+                  <select
+                    value={editingProvider.region || 'global'}
+                    onChange={(e) => setEditingProvider({ ...editingProvider, region: e.target.value as 'global' | 'china' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="global">{lang === 'zh' ? '全球' : 'Global'}</option>
+                    <option value="china">{lang === 'zh' ? '中国' : 'China'}</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={editingProvider.supportESM || false}
+                      onChange={(e) => setEditingProvider({ ...editingProvider, supportESM: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      {lang === 'zh' ? '支持 ESM' : 'Support ESM'}
+                    </span>
+                  </label>
+                  
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={editingProvider.supportVersions !== false}
+                      onChange={(e) => setEditingProvider({ ...editingProvider, supportVersions: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      {lang === 'zh' ? '支持版本查询' : 'Support Versions'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={cancelEdit}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+              >
+                {lang === 'zh' ? '取消' : 'Cancel'}
+              </button>
+              <button
+                onClick={saveEditedProvider}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                {lang === 'zh' ? '保存' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

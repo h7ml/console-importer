@@ -151,85 +151,359 @@ $i.debug()
 
 ### Real-world Examples
 
-#### Data Visualization with ECharts
+#### 🎯 One-Click Testing Examples
+The following examples are designed to work immediately on any webpage. Copy and paste into your browser console:
+
+#### 📊 Data Visualization with ECharts
 
 ```javascript
-// Import ECharts
+// Complete working example - creates a chart in the page
 await $i('echarts')
 
-// Initialize ECharts instance
-var myChart = echarts.init(document.getElementById('chart-container'));
-// If no container, use body
-// var myChart = echarts.init(document.body);
+// Create container if it doesn't exist
+let container = document.getElementById('echarts-demo')
+if (!container) {
+  container = document.createElement('div')
+  container.id = 'echarts-demo'
+  container.style.cssText = 'width:800px;height:400px;margin:20px;border:1px solid #ccc;'
+  document.body.appendChild(container)
+}
 
-// Configure chart
-var option = {
-  title: {
-    text: 'ECharts Example'
-  },
-  tooltip: {},
-  legend: {
-    data: ['Sales']
-  },
-  xAxis: {
-    data: ['Shirts', 'Sweaters', 'Chiffon', 'Pants', 'Heels', 'Socks']
-  },
+// Initialize chart
+const myChart = echarts.init(container)
+
+// Configure and display chart
+const option = {
+  title: { text: 'Console Importer Demo Chart' },
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['Sales', 'Profit'] },
+  xAxis: { data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
   yAxis: {},
   series: [
-    {
-      name: 'Sales',
-      type: 'bar',
-      data: [5, 20, 36, 10, 10, 20]
-    }
+    { name: 'Sales', type: 'bar', data: [120, 200, 150, 80, 70, 110] },
+    { name: 'Profit', type: 'line', data: [20, 50, 30, 15, 25, 40] }
   ]
-};
+}
 
-// Display chart
-myChart.setOption(option);
+myChart.setOption(option)
+console.log('📊 ECharts demo created! Check the chart above.')
 ```
 
-#### CDN-Specific Imports
+#### 🎨 UI Enhancement with Bootstrap + Animations
 
 ```javascript
-// Import from specific CDN providers
-await $i.jsdelivr('lodash')         // From jsDelivr
-await $i.unpkg('react@18.0.0')      // From unpkg
-await $i.skypack('lit')             // From Skypack
-await $i.esm('vue')                 // From esm.sh (existing method)
+// Import Bootstrap CSS and Animate.css
+await $i.css('bootstrap@5.3.0')
+await $i.css('animate.css@4.1.1')
 
-// CDN-specific CSS imports
-await $i.jsdelivr.css('bootstrap')
-await $i.unpkg.css('animate.css@4.1.1')
+// Create a demo modal
+const modalHTML = `
+  <div class="modal fade" id="demoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content animate__animated animate__bounceIn">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">🎉 Console Importer Demo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-success animate__animated animate__pulse animate__infinite">
+            ✅ Bootstrap and Animate.css successfully loaded!
+          </div>
+          <p>This modal demonstrates:</p>
+          <ul>
+            <li>Bootstrap 5 styling</li>
+            <li>CSS animations with animate.css</li>
+            <li>Responsive design</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="animateBtn">Animate!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`
 
-// CDN-specific ESM imports (if supported)
-await $i.skypack.esm('lit-element')
-await $i.jsdelivr.esm('react')
+document.body.insertAdjacentHTML('beforeend', modalHTML)
 
-// Chinese CDN examples
-await $i.bootcdn('jquery')          // From BootCDN
-await $i.bytedancecdn('vue')        // From ByteDance CDN
+// Import Bootstrap JS for modal functionality
+await $i('bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js')
 
-// Custom CDN (if configured)
-await $i.custom1('my-package')
+// Show modal and add animation handler
+const modal = new bootstrap.Modal(document.getElementById('demoModal'))
+modal.show()
+
+document.getElementById('animateBtn')?.addEventListener('click', () => {
+  const content = document.querySelector('#demoModal .modal-content')
+  content.className = 'modal-content animate__animated animate__tada'
+  setTimeout(() => {
+    content.className = 'modal-content animate__animated animate__bounceIn'
+  }, 1000)
+})
+
+console.log('🎨 Bootstrap + Animate.css demo created!')
 ```
 
-#### Other Popular Libraries
+#### ⚛️ React Components with Hooks
 
 ```javascript
-// Import Chart.js for charts
+// Import React and ReactDOM
+const React = await $i.esm('react@18')
+const ReactDOM = await $i.esm('react-dom@18/client')
+const { useState, useEffect } = React
+
+// Create container
+let container = document.getElementById('react-demo')
+if (!container) {
+  container = document.createElement('div')
+  container.id = 'react-demo'
+  container.style.cssText = 'margin:20px;padding:20px;border:2px solid #61dafb;border-radius:8px;'
+  document.body.appendChild(container)
+}
+
+// Counter component with hooks
+const Counter = () => {
+  const [count, setCount] = useState(0)
+  const [message, setMessage] = useState('Welcome to Console Importer!')
+  
+  useEffect(() => {
+    if (count > 0) setMessage(`You clicked ${count} times!`)
+  }, [count])
+  
+  return React.createElement('div', { style: { textAlign: 'center', fontFamily: 'Arial' } },
+    React.createElement('h2', { style: { color: '#61dafb' } }, 'React Demo'),
+    React.createElement('p', null, message),
+    React.createElement('div', { style: { fontSize: '48px', margin: '20px 0' } }, count),
+    React.createElement('div', null,
+      React.createElement('button', {
+        onClick: () => setCount(count - 1),
+        style: { margin: '0 10px', padding: '8px 16px', fontSize: '16px' }
+      }, '➖'),
+      React.createElement('button', {
+        onClick: () => setCount(0),
+        style: { margin: '0 10px', padding: '8px 16px', fontSize: '16px' }
+      }, '🔄'),
+      React.createElement('button', {
+        onClick: () => setCount(count + 1),
+        style: { margin: '0 10px', padding: '8px 16px', fontSize: '16px' }
+      }, '➕')
+    )
+  )
+}
+
+// Render component
+const root = ReactDOM.createRoot(container)
+root.render(React.createElement(Counter))
+console.log('⚛️ React counter demo created!')
+```
+
+#### 🌐 HTTP Requests with Axios
+
+```javascript
+// Import Axios
+const axios = await $i.esm('axios')
+
+// Create demo container
+let container = document.getElementById('axios-demo')
+if (!container) {
+  container = document.createElement('div')
+  container.id = 'axios-demo'
+  container.style.cssText = 'margin:20px;padding:20px;border:1px solid #00d4ff;border-radius:8px;font-family:Arial;'
+  document.body.appendChild(container)
+}
+
+container.innerHTML = `
+  <h3 style="color:#00d4ff;">🌐 Axios HTTP Demo</h3>
+  <button id="fetchBtn" style="padding:8px 16px;margin-right:10px;">Fetch Random User</button>
+  <button id="fetchJokeBtn" style="padding:8px 16px;">Fetch Dad Joke</button>
+  <div id="result" style="margin-top:15px;padding:10px;background:#f5f5f5;border-radius:4px;">Click a button to fetch data</div>
+`
+
+// Fetch random user data
+document.getElementById('fetchBtn').addEventListener('click', async () => {
+  const result = document.getElementById('result')
+  result.innerHTML = '🔄 Loading...'
+  
+  try {
+    const response = await axios.get('https://jsonplaceholder.typicode.com/users/1')
+    const user = response.data
+    result.innerHTML = `
+      <h4>👤 User Information:</h4>
+      <p><strong>Name:</strong> ${user.name}</p>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>Company:</strong> ${user.company.name}</p>
+      <p><strong>Website:</strong> ${user.website}</p>
+    `
+  } catch (error) {
+    result.innerHTML = `❌ Error: ${error.message}`
+  }
+})
+
+// Fetch dad joke
+document.getElementById('fetchJokeBtn').addEventListener('click', async () => {
+  const result = document.getElementById('result')
+  result.innerHTML = '🔄 Loading joke...'
+  
+  try {
+    const response = await axios.get('https://icanhazdadjoke.com/', {
+      headers: { 'Accept': 'application/json' }
+    })
+    result.innerHTML = `
+      <h4>😂 Dad Joke:</h4>
+      <p style="font-style:italic;font-size:16px;">${response.data.joke}</p>
+    `
+  } catch (error) {
+    result.innerHTML = `❌ Error: ${error.message}`
+  }
+})
+
+console.log('🌐 Axios demo created! Try fetching some data.')
+```
+
+#### 🎮 3D Graphics with Three.js
+
+```javascript
+// Import Three.js
+const THREE = await $i.esm('three@0.150.0')
+
+// Create container
+let container = document.getElementById('threejs-demo')
+if (!container) {
+  container = document.createElement('div')
+  container.id = 'threejs-demo'
+  container.style.cssText = 'width:600px;height:400px;margin:20px;border:2px solid #ff6b35;border-radius:8px;'
+  document.body.appendChild(container)
+}
+
+// Create scene, camera, renderer
+const scene = new THREE.Scene()
+const camera = new THREE.PerspectiveCamera(75, 600/400, 0.1, 1000)
+const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.setSize(600, 400)
+renderer.setClearColor(0x222222)
+container.appendChild(renderer.domElement)
+
+// Create rotating cube
+const geometry = new THREE.BoxGeometry(2, 2, 2)
+const material = new THREE.MeshPhongMaterial({ 
+  color: 0xff6b35,
+  shininess: 100
+})
+const cube = new THREE.Mesh(geometry, material)
+scene.add(cube)
+
+// Add lighting
+const light = new THREE.DirectionalLight(0xffffff, 1)
+light.position.set(5, 5, 5)
+scene.add(light)
+scene.add(new THREE.AmbientLight(0x404040, 0.4))
+
+camera.position.z = 5
+
+// Animation loop
+function animate() {
+  requestAnimationFrame(animate)
+  cube.rotation.x += 0.01
+  cube.rotation.y += 0.01
+  renderer.render(scene, camera)
+}
+animate()
+
+console.log('🎮 Three.js rotating cube demo created!')
+```
+
+#### 🚀 CDN-Specific Import Examples
+
+```javascript
+// Test different CDN providers
+console.log('Testing CDN providers...')
+
+// jsDelivr (Global, Fast)
+await $i.jsdelivr('lodash')
+console.log('✅ Lodash from jsDelivr:', typeof _)
+
+// unpkg (npm registry mirror)
+const moment = await $i.unpkg.esm('moment')
+console.log('✅ Moment from unpkg:', moment().format('YYYY-MM-DD'))
+
+// Skypack (ESM optimized)
+const { LitElement, html } = await $i.skypack.esm('lit')
+console.log('✅ Lit from Skypack:', typeof LitElement)
+
+// CSS from different CDNs
+await $i.jsdelivr.css('animate.css@4.1.1')
+console.log('✅ Animate.css loaded from jsDelivr')
+
+// Bootstrap from unpkg
+await $i.unpkg.css('bootstrap@5.3.0/dist/css/bootstrap.min.css')
+console.log('✅ Bootstrap CSS loaded from unpkg')
+
+// Test Chinese CDNs (if available)
+try {
+  await $i.bootcdn('jquery')
+  console.log('✅ jQuery from BootCDN (China)')
+} catch (e) {
+  console.log('⚠️ BootCDN not available or configured')
+}
+
+console.log('🎯 All CDN tests completed!')
+```
+
+#### 📚 Popular Library Quick Tests
+
+```javascript
+// Quick test suite for popular libraries
+console.log('🔍 Testing popular libraries...')
+
+// Lodash utilities
+await $i('lodash')
+const testArray = [1, 2, 3, 4, 5, 6]
+console.log('📦 Lodash chunk:', _.chunk(testArray, 2))
+
+// jQuery DOM manipulation  
+await $i('jquery')
+$('body').css('border', '3px solid #007cba')
+console.log('📦 jQuery loaded, body border added')
+
+// Day.js date formatting
+const dayjs = await $i.esm('dayjs')
+console.log('📦 Day.js current time:', dayjs().format('YYYY-MM-DD HH:mm:ss'))
+
+// Chart.js for quick chart
 await $i('chart.js')
+let chartContainer = document.getElementById('quick-chart')
+if (!chartContainer) {
+  chartContainer = document.createElement('div')
+  chartContainer.innerHTML = '<canvas id="quickChart" width="400" height="200"></canvas>'
+  chartContainer.style.cssText = 'margin:20px;padding:20px;border:1px solid #ff6384;'
+  document.body.appendChild(chartContainer)
+  
+  new Chart(document.getElementById('quickChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Console', 'Importer', 'Demo'],
+      datasets: [{ data: [30, 40, 30], backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe'] }]
+    },
+    options: { responsive: false }
+  })
+}
+console.log('📦 Chart.js demo chart created')
 
-// Import D3.js for data visualization
-await $i('d3')
+// Animate.css with demo element
+await $i.css('animate.css')
+let animateDemo = document.getElementById('animate-demo')
+if (!animateDemo) {
+  animateDemo = document.createElement('div')
+  animateDemo.id = 'animate-demo'
+  animateDemo.innerHTML = '🎉 Console Importer Rocks!'
+  animateDemo.style.cssText = 'font-size:24px;text-align:center;padding:20px;margin:20px;background:linear-gradient(45deg,#ff6b6b,#4ecdc4);color:white;border-radius:10px;'
+  animateDemo.className = 'animate__animated animate__bounce animate__infinite'
+  document.body.appendChild(animateDemo)
+}
+console.log('📦 Animate.css demo element created')
 
-// Import Three.js for 3D graphics
-await $i('three')
-
-// Import Axios for HTTP requests
-await $i('axios')
-
-// Import Day.js for date manipulation
-await $i('dayjs')
+console.log('✅ All library tests completed! Check the page for visual demos.')
 ```
 
 ## ⚙️ Configuration

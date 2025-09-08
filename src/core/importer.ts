@@ -35,6 +35,27 @@ export class ConsoleImporter {
     return { name: match[1], version: match[2] };
   }
 
+  private async resolveVersion(packageName: string, requestedVersion: string): Promise<string> {
+    // If requesting 'latest', try to get actual latest version
+    if (!requestedVersion || requestedVersion === 'latest') {
+      try {
+        // Try jsDelivr API for version resolution
+        const response = await fetch(`https://data.jsdelivr.com/v1/packages/npm/${packageName}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.versions && Array.isArray(data.versions) && data.versions.length > 0) {
+            // Return the first version (latest)
+            return data.versions[0].version || data.versions[0];
+          }
+        }
+      } catch (error) {
+        // If jsDelivr fails, fall back to 'latest'
+      }
+      return 'latest';
+    }
+    return requestedVersion;
+  }
+
   private buildUrl(
     provider: CDNProvider,
     packageName: string,
@@ -121,14 +142,20 @@ export class ConsoleImporter {
   }
 
   // Add method to import from specific provider
-  async importFromProvider(providerId: string, packageStr: string, version?: string, type: 'js' | 'css' | 'esm' = 'js'): Promise<ImportResult> {
+  async importFromProvider(
+    providerId: string,
+    packageStr: string,
+    version?: string,
+    type: 'js' | 'css' | 'esm' = 'js'
+  ): Promise<ImportResult> {
     const { name, version: parsedVersion } = this.parsePackage(packageStr);
     const targetVersion = version || parsedVersion || 'latest';
-    const provider = this.config.providers.find(p => 
-      p.id === providerId || 
-      p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === providerId.toLowerCase()
+    const provider = this.config.providers.find(
+      (p) =>
+        p.id === providerId ||
+        p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === providerId.toLowerCase()
     );
-    
+
     if (!provider) {
       const errorMsg = `Provider '${providerId}' not found`;
       this.showNotification(`❌ ${errorMsg}`, 'error');
@@ -151,7 +178,7 @@ export class ConsoleImporter {
     try {
       const resolvedVersion = await this.resolveVersion(name, targetVersion);
       const url = this.buildUrl(provider, name, resolvedVersion, type === 'esm' ? 'js' : type);
-      
+
       let result: ImportResult;
       if (type === 'css') {
         result = await this.loadCSS(url);
@@ -162,10 +189,15 @@ export class ConsoleImporter {
       }
 
       if (result.success) {
-        this.showNotification(`✅ Loaded ${name}@${resolvedVersion} from ${provider.name} (${type.toUpperCase()})`);
+        this.showNotification(
+          `✅ Loaded ${name}@${resolvedVersion} from ${provider.name} (${type.toUpperCase()})`
+        );
         return { ...result, provider: provider.name };
       } else {
-        this.showNotification(`❌ Failed to load ${name}@${resolvedVersion} from ${provider.name}`, 'error');
+        this.showNotification(
+          `❌ Failed to load ${name}@${resolvedVersion} from ${provider.name}`,
+          'error'
+        );
         return result;
       }
     } catch (error) {

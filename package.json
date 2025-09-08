@@ -1,6 +1,6 @@
 {
   "name": "console-importer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Import JavaScript and CSS resources from console, with one command.",
   "author": "h7ml",
   "license": "MIT",

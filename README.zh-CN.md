@@ -188,30 +188,151 @@ var option = {
 myChart.setOption(option);
 ```
 
-#### 指定 CDN 源导入
+#### 🎯 一键测试示例
+以下示例设计为在任何网页上立即工作。复制并粘贴到您的浏览器控制台：
+
+#### 📊 ECharts 数据可视化
 
 ```javascript
-// 从指定 CDN 提供商导入
-await $i.jsdelivr('lodash')         // 从 jsDelivr 导入
-await $i.unpkg('react@18.0.0')      // 从 unpkg 导入
-await $i.skypack('lit')             // 从 Skypack 导入
-await $i.esm('vue')                 // 从 esm.sh 导入（现有方法）
+// 完整可用示例 - 在页面中创建图表
+await $i('echarts')
 
-// CDN 特定 CSS 导入
-await $i.jsdelivr.css('bootstrap')
-await $i.unpkg.css('animate.css@4.1.1')
+// 创建容器（如果不存在）
+let container = document.getElementById('echarts-demo')
+if (!container) {
+  container = document.createElement('div')
+  container.id = 'echarts-demo'
+  container.style.cssText = 'width:800px;height:400px;margin:20px;border:1px solid #ccc;'
+  document.body.appendChild(container)
+}
 
-// CDN 特定 ESM 导入（如果支持）
-await $i.skypack.esm('lit-element')
-await $i.jsdelivr.esm('react')
+// 初始化图表
+const myChart = echarts.init(container)
 
-// 中国 CDN 示例
-await $i.bootcdn('jquery')          // 从 BootCDN 导入
-await $i.bytedancecdn('vue')        // 从 字节跳动 CDN 导入
-await $i.staticfile('lodash')       // 从 七牛云 CDN 导入
+// 配置并显示图表
+const option = {
+  title: { text: 'Console Importer 演示图表' },
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['销量', '利润'] },
+  xAxis: { data: ['一月', '二月', '三月', '四月', '五月', '六月'] },
+  yAxis: {},
+  series: [
+    { name: '销量', type: 'bar', data: [120, 200, 150, 80, 70, 110] },
+    { name: '利润', type: 'line', data: [20, 50, 30, 15, 25, 40] }
+  ]
+}
 
-// 自定义 CDN（如果配置了）
-await $i.custom1('my-package')
+myChart.setOption(option)
+console.log('📊 ECharts 演示创建完成！请查看上方的图表。')
+```
+
+#### 🎨 Bootstrap + 动画效果
+
+```javascript
+// 导入 Bootstrap CSS 和 Animate.css
+await $i.css('bootstrap@5.3.0')
+await $i.css('animate.css@4.1.1')
+
+// 创建演示模态框
+const modalHTML = `
+  <div class="modal fade" id="demoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content animate__animated animate__bounceIn">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">🎉 Console Importer 演示</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-success animate__animated animate__pulse animate__infinite">
+            ✅ Bootstrap 和 Animate.css 成功加载！
+          </div>
+          <p>此模态框演示了：</p>
+          <ul>
+            <li>Bootstrap 5 样式</li>
+            <li>CSS 动画效果</li>
+            <li>响应式设计</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+          <button type="button" class="btn btn-primary" id="animateBtn">动画！</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`
+
+document.body.insertAdjacentHTML('beforeend', modalHTML)
+
+// 导入 Bootstrap JS
+await $i('bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js')
+
+// 显示模态框并添加动画处理器
+const modal = new bootstrap.Modal(document.getElementById('demoModal'))
+modal.show()
+
+document.getElementById('animateBtn')?.addEventListener('click', () => {
+  const content = document.querySelector('#demoModal .modal-content')
+  content.className = 'modal-content animate__animated animate__tada'
+  setTimeout(() => {
+    content.className = 'modal-content animate__animated animate__bounceIn'
+  }, 1000)
+})
+
+console.log('🎨 Bootstrap + Animate.css 演示创建完成！')
+```
+
+#### ⚛️ React Hook 组件
+
+```javascript
+// 导入 React 和 ReactDOM
+const React = await $i.esm('react@18')
+const ReactDOM = await $i.esm('react-dom@18/client')
+const { useState, useEffect } = React
+
+// 创建容器
+let container = document.getElementById('react-demo')
+if (!container) {
+  container = document.createElement('div')
+  container.id = 'react-demo'
+  container.style.cssText = 'margin:20px;padding:20px;border:2px solid #61dafb;border-radius:8px;'
+  document.body.appendChild(container)
+}
+
+// 计数器组件
+const Counter = () => {
+  const [count, setCount] = useState(0)
+  const [message, setMessage] = useState('欢迎使用 Console Importer！')
+  
+  useEffect(() => {
+    if (count > 0) setMessage(`您点击了 ${count} 次！`)
+  }, [count])
+  
+  return React.createElement('div', { style: { textAlign: 'center', fontFamily: 'Arial' } },
+    React.createElement('h2', { style: { color: '#61dafb' } }, 'React 演示'),
+    React.createElement('p', null, message),
+    React.createElement('div', { style: { fontSize: '48px', margin: '20px 0' } }, count),
+    React.createElement('div', null,
+      React.createElement('button', {
+        onClick: () => setCount(count - 1),
+        style: { margin: '0 10px', padding: '8px 16px', fontSize: '16px' }
+      }, '➖'),
+      React.createElement('button', {
+        onClick: () => setCount(0),
+        style: { margin: '0 10px', padding: '8px 16px', fontSize: '16px' }
+      }, '🔄'),
+      React.createElement('button', {
+        onClick: () => setCount(count + 1),
+        style: { margin: '0 10px', padding: '8px 16px', fontSize: '16px' }
+      }, '➕')
+    )
+  )
+}
+
+// 渲染组件
+const root = ReactDOM.createRoot(container)
+root.render(React.createElement(Counter))
+console.log('⚛️ React 计数器演示创建完成！')
 ```
 
 #### 其他流行库示例

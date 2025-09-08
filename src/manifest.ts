@@ -3,7 +3,7 @@ import { defineManifest } from '@webx-kit/rsbuild-plugin/manifest';
 export default defineManifest(() => ({
   manifest_version: 3,
   name: 'Console Importer',
-  version: '1.0.0',
+  version: '1.1.0',
   description: 'Import JavaScript and CSS resources from console with multiple CDN support',
   icons: {
     16: 'public/logo.png',
@@ -17,9 +17,10 @@ export default defineManifest(() => ({
     page: 'options.html',
     open_in_tab: true,
   },
-  permissions: ['storage', 'activeTab'],
+  permissions: ['storage', 'activeTab', 'scripting'],
   host_permissions: [
     'https://cdn.jsdelivr.net/*',
+    'https://data.jsdelivr.com/*',
     'https://unpkg.com/*',
     'https://esm.sh/*',
     'https://cdn.skypack.dev/*',

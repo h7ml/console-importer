@@ -70,29 +70,30 @@
     const { name, version: parsedVersion } = consoleImporter.parsePackage(packageStr);
     const targetVersion = version || parsedVersion || 'latest';
     const providers = getEnabledProviders();
-    
-    const provider = providers.find(p => 
-      p.id === providerId || 
-      p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === providerId.toLowerCase()
+
+    const provider = providers.find(
+      (p) =>
+        p.id === providerId ||
+        p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === providerId.toLowerCase()
     );
-    
+
     if (!provider) {
       const errorMsg = `❌ Provider '${providerId}' not found or not enabled`;
       console.error(errorMsg);
       return { success: false, error: errorMsg };
     }
-    
+
     // 检查 ESM 支持
     if (type === 'esm' && !provider.supportESM) {
       const errorMsg = `❌ Provider '${provider.name}' does not support ESM`;
       console.error(errorMsg);
       return { success: false, error: errorMsg };
     }
-    
+
     const resolvedVersion = await consoleImporter.resolveVersion(name, targetVersion);
     const template = type === 'css' ? provider.cssUrl : provider.url;
     const url = consoleImporter.buildUrl(template, name, resolvedVersion);
-    
+
     try {
       let result;
       if (type === 'css') {
@@ -102,9 +103,11 @@
       } else {
         result = await consoleImporter.loadScript(url);
       }
-      
+
       if (result.success) {
-        console.log(`✅ Loaded ${name}@${resolvedVersion} from ${provider.name} (${type.toUpperCase()})`);
+        console.log(
+          `✅ Loaded ${name}@${resolvedVersion} from ${provider.name} (${type.toUpperCase()})`
+        );
         console.log(`   URL: ${url}`);
         return { ...result, version: resolvedVersion, provider: provider.name };
       } else {
@@ -148,7 +151,8 @@
   // API 端点
   const SEARCH_API = 'https://api.npms.io/v2/search';
   const VERSIONS_API = 'https://registry.npmjs.org/{package}';
-  const JSDELIVR_VERSIONS_API = 'https://api.jsdelivr.com/v1/packages/npm/{package}';
+  const JSDELIVR_VERSIONS_API = 'https://data.jsdelivr.com/v1/packages/npm/{package}';
+  const JSDELIVR_SEARCH_API = 'https://data.jsdelivr.com/v1/packages';
 
   // 创建完整的 Console Importer 实现
   const consoleImporter = {
@@ -199,7 +203,7 @@
     },
 
     async resolveVersion(packageName, requestedVersion) {
-      // 如果请求的是 'latest'，尝试获取实际的最新版本号
+      // 如果请求的是 'latest'，尝试从 jsDelivr 或 npm registry 获取实际的最新版本号
       if (!requestedVersion || requestedVersion === 'latest') {
         try {
           const versions = await this.getVersions(packageName);
@@ -261,12 +265,17 @@
 
     async getVersions(packageName) {
       try {
-        // 先尝试 jsDelivr API（更快）
+        // 先尝试 jsDelivr API（使用新的 data.jsdelivr.com 端点）
         const jsdelivrUrl = JSDELIVR_VERSIONS_API.replace('{package}', packageName);
         let response = await fetch(jsdelivrUrl);
 
         if (response.ok) {
           const data = await response.json();
+          // 新 API 结构：data.jsdelivr.com 返回 { versions: [...] }
+          if (data.versions && Array.isArray(data.versions)) {
+            // 版本按时间倒序排列，最新的在前
+            return data.versions.map((v) => v.version || v);
+          }
           return data.versions || [];
         }
 
@@ -375,17 +384,19 @@
 
   // 帮助信息
   $i.help = function () {
-    const cdnMethodsHelp = cdnMethods.map(m => {
-      const methods = [`  $i.${m.methodName}('package')          // From ${m.provider}`];
-      methods.push(`  $i.${m.methodName}.css('package')     // CSS from ${m.provider}`);
-      if (m.hasESM) {
-        methods.push(`  $i.${m.methodName}.esm('package')     // ESM from ${m.provider}`);
-      }
-      return methods.join('\n');
-    }).join('\n');
-    
+    const cdnMethodsHelp = cdnMethods
+      .map((m) => {
+        const methods = [`  $i.${m.methodName}('package')          // From ${m.provider}`];
+        methods.push(`  $i.${m.methodName}.css('package')     // CSS from ${m.provider}`);
+        if (m.hasESM) {
+          methods.push(`  $i.${m.methodName}.esm('package')     // ESM from ${m.provider}`);
+        }
+        return methods.join('\n');
+      })
+      .join('\n');
+
     console.log(`
-🚀 Console Importer v1.0.0
+🚀 Console Importer v1.1.0
 
 Basic Usage:
   $i('lodash')                    // Import latest lodash
@@ -440,35 +451,35 @@ Examples:
   const createProviderMethods = () => {
     const availableProviders = getEnabledProviders();
     const createdMethods = [];
-    
-    availableProviders.forEach(provider => {
+
+    availableProviders.forEach((provider) => {
       const methodName = normalizeMethodName(provider.name);
       const providerId = provider.id;
-      
+
       // 主方法 (JS 导入)
       $i[methodName] = async (packageStr, version) => {
         return await importFromProvider(providerId, packageStr, version, 'js');
       };
-      
+
       // CSS 导入方法
       $i[methodName].css = async (packageStr, version) => {
         return await importFromProvider(providerId, packageStr, version, 'css');
       };
-      
+
       // ESM 导入方法（仅支持 ESM 的提供商）
       if (provider.supportESM) {
         $i[methodName].esm = async (packageStr, version) => {
           return await importFromProvider(providerId, packageStr, version, 'esm');
         };
       }
-      
+
       createdMethods.push({
         provider: provider.name,
         methodName: methodName,
-        hasESM: provider.supportESM
+        hasESM: provider.supportESM,
       });
     });
-    
+
     console.log('[Console Importer] Created CDN-specific methods:', createdMethods);
     return createdMethods;
   };

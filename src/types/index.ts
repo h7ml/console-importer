@@ -9,6 +9,7 @@ export interface CDNProvider {
   cssTemplate: string;
   searchApi?: string;
   versionsApi?: string;
+  packageInfoApi?: string;
   supportESM?: boolean;
   supportVersions?: boolean;
   region?: 'global' | 'china';

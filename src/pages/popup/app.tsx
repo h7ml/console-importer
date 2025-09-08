@@ -86,7 +86,7 @@ export const App = () => {
         <img className="h-8" src={logo} alt="Logo" />
         <div>
           <h1 className="text-lg font-semibold text-slate-800">{t('console_importer', lang)}</h1>
-          <p className="text-sm text-slate-500">v1.0.0</p>
+          <p className="text-sm text-slate-500">v1.1.0</p>
         </div>
       </div>
 

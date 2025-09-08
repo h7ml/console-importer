@@ -10,7 +10,6 @@ export default defineConfig({
       contentScripts: {
         import: './src/content-scripts/inject.ts',
         matches: ['<all_urls>'],
-        runAt: 'document_start',
       },
       pages: {
         options: './src/pages/options/index.tsx',

@@ -32,7 +32,7 @@ $i.css = async (packageName: string, version?: string) => {
 // 帮助信息
 $i.help = () => {
   const helpText = `
-🚀 Console Importer v1.0.0
+🚀 Console Importer v1.1.0
 
 Basic Usage:
   $i('lodash')                    // Import latest lodash

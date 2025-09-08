@@ -418,6 +418,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Original [Console Importer](https://github.com/pd4d10/console-importer) by pd4d10
+- [WebX Kit](https://github.com/tmkx/webx-kit) by [@tmkx](https://github.com/tmkx) - Modern Chrome extension development framework
 - All CDN providers for their excellent services
 - The open-source community
 

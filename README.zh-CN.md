@@ -418,6 +418,7 @@ const versions = await $i.versions('lodash')
 ## 🙏 致谢
 
 - 原版 [Console Importer](https://github.com/pd4d10/console-importer) 作者 pd4d10
+- [WebX Kit](https://github.com/tmkx/webx-kit) 作者 [@tmkx](https://github.com/tmkx) - 现代化 Chrome 扩展开发框架
 - 所有 CDN 提供商的优秀服务
 - 开源社区
 

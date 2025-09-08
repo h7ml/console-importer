@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build extension
+      run: pnpm run build
+    
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Update manifest version
+      run: |
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${{ steps.get_version.outputs.VERSION }}\"/" dist/manifest.json
+    
+    - name: Create extension zip
+      run: |
+        cd dist
+        zip -r ../console-importer-${{ steps.get_version.outputs.VERSION }}.zip *
+        cd ..
+    
+    - name: Create source code zip
+      run: |
+        zip -r console-importer-source-${{ steps.get_version.outputs.VERSION }}.zip . \
+          -x "*.git*" \
+          -x "*node_modules*" \
+          -x "*dist*" \
+          -x "*.DS_Store" \
+          -x "*.zip"
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          console-importer-${{ steps.get_version.outputs.VERSION }}.zip
+          console-importer-source-${{ steps.get_version.outputs.VERSION }}.zip
+        body: |
+          ## Console Importer v${{ steps.get_version.outputs.VERSION }}
+          
+          ### 🚀 Chrome Extension Package
+          - Download `console-importer-${{ steps.get_version.outputs.VERSION }}.zip`
+          - Extract and load in Chrome at `chrome://extensions/` with developer mode enabled
+          
+          ### 📦 Source Code
+          - Download `console-importer-source-${{ steps.get_version.outputs.VERSION }}.zip` for development
+          
+          ### 📝 What's Changed
+          Please see the [commits](https://github.com/h7ml/console-importer/commits/v${{ steps.get_version.outputs.VERSION }}) for detailed changes.
+          
+          ### 🔧 Installation
+          1. Download the extension zip file
+          2. Open Chrome and navigate to `chrome://extensions/`
+          3. Enable "Developer mode"
+          4. Click "Load unpacked"
+          5. Select the extracted folder
+          
+          ---
+          
+          ## Console Importer v${{ steps.get_version.outputs.VERSION }}
+          
+          ### 🚀 Chrome 扩展包
+          - 下载 `console-importer-${{ steps.get_version.outputs.VERSION }}.zip`
+          - 解压并在 `chrome://extensions/` 中加载（需要开启开发者模式）
+          
+          ### 📦 源代码
+          - 下载 `console-importer-source-${{ steps.get_version.outputs.VERSION }}.zip` 用于开发
+          
+          ### 📝 更新内容
+          请查看 [提交记录](https://github.com/h7ml/console-importer/commits/v${{ steps.get_version.outputs.VERSION }}) 了解详细变更。
+          
+          ### 🔧 安装方法
+          1. 下载扩展压缩包
+          2. 打开 Chrome 并导航到 `chrome://extensions/`
+          3. 启用"开发者模式"
+          4. 点击"加载已解压的扩展程序"
+          5. 选择解压后的文件夹
+        generate_release_notes: false

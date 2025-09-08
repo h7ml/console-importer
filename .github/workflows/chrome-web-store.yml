@@ -1,0 +1,70 @@
+name: Chrome Web Store Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_target:
+        description: 'Publish target'
+        required: true
+        default: 'draft'
+        type: choice
+        options:
+        - draft
+        - production
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build extension
+      run: pnpm run build
+    
+    - name: Get version from package.json
+      id: get_version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Update manifest version
+      run: |
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${{ steps.get_version.outputs.VERSION }}\"/" dist/manifest.json
+    
+    - name: Create extension zip for Chrome Web Store
+      run: |
+        cd dist
+        zip -r ../console-importer-cws.zip *
+        cd ..
+    
+    - name: Publish to Chrome Web Store
+      uses: mnao305/chrome-extension-upload@v4.0.1
+      with:
+        file-path: console-importer-cws.zip
+        extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+        client-id: ${{ secrets.CHROME_CLIENT_ID }}
+        client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+        refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        publish: ${{ github.event.inputs.publish_target == 'production' }}
+    
+    - name: Create draft release
+      if: github.event.inputs.publish_target == 'draft'
+      run: echo "Extension uploaded as draft to Chrome Web Store"
+    
+    - name: Published to production
+      if: github.event.inputs.publish_target == 'production'
+      run: echo "Extension published to Chrome Web Store"

@@ -1,11 +1,25 @@
 {
-  "name": "consoleImport",
-  "version": "0.0.1",
+  "name": "console-importer",
+  "version": "1.0.0",
+  "description": "Import JavaScript and CSS resources from console, with one command.",
+  "author": "h7ml",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h7ml/console-importer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/h7ml/console-importer/issues"
+  },
+  "homepage": "https://github.com/h7ml/console-importer#readme",
+  "packageManager": "pnpm@8.15.1",
   "private": true,
   "scripts": {
     "dev": "rsbuild dev",
     "build": "rsbuild build",
-    "lint:type": "tsc --noEmit"
+    "lint:type": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@webx-kit/runtime": "^0.2.1",
@@ -22,6 +36,7 @@
     "@types/react-dom": "^19.1.7",
     "@webx-kit/rsbuild-plugin": "^0.2.1",
     "@webx-kit/test-utils": "^0.2.1",
+    "prettier": "^3.3.3",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.2"
   }

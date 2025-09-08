@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Format check
+      run: pnpm run format:check || true
+    
+    - name: Build extension
+      run: pnpm run build
+    
+    - name: Check build output
+      run: |
+        if [ ! -f "dist/manifest.json" ]; then
+          echo "manifest.json not found in dist folder"
+          exit 1
+        fi
+        if [ ! -f "dist/background.js" ]; then
+          echo "background.js not found in dist folder"
+          exit 1
+        fi
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: extension-${{ matrix.node-version }}
+        path: dist/

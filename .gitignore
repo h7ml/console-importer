@@ -20,3 +20,11 @@ output/
 log/
 
 .env
+
+# Build artifacts
+*.zip
+console-importer-*.zip
+
+# IDE
+.vscode/
+.idea/

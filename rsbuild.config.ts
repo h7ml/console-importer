@@ -8,8 +8,9 @@ export default defineConfig({
     webxPlugin({
       background: './src/background/index.ts',
       contentScripts: {
-        import: './src/content-scripts/index.tsx',
+        import: './src/content-scripts/inject.ts',
         matches: ['<all_urls>'],
+        runAt: 'document_start',
       },
       pages: {
         options: './src/pages/options/index.tsx',
@@ -22,6 +23,10 @@ export default defineConfig({
       {
         from: './public',
         to: './public',
+      },
+      {
+        from: './src/content-scripts/injected-script.js',
+        to: './static/js/injected-script.js',
       },
     ],
   },

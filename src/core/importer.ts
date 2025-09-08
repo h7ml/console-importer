@@ -120,6 +120,61 @@ export class ConsoleImporter {
     });
   }
 
+  // Add method to import from specific provider
+  async importFromProvider(providerId: string, packageStr: string, version?: string, type: 'js' | 'css' | 'esm' = 'js'): Promise<ImportResult> {
+    const { name, version: parsedVersion } = this.parsePackage(packageStr);
+    const targetVersion = version || parsedVersion || 'latest';
+    const provider = this.config.providers.find(p => 
+      p.id === providerId || 
+      p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === providerId.toLowerCase()
+    );
+    
+    if (!provider) {
+      const errorMsg = `Provider '${providerId}' not found`;
+      this.showNotification(`❌ ${errorMsg}`, 'error');
+      return { success: false, error: errorMsg };
+    }
+
+    if (!provider.enabled) {
+      const errorMsg = `Provider '${provider.name}' is disabled`;
+      this.showNotification(`❌ ${errorMsg}`, 'error');
+      return { success: false, error: errorMsg };
+    }
+
+    // Check ESM support
+    if (type === 'esm' && !provider.supportESM) {
+      const errorMsg = `Provider '${provider.name}' does not support ESM`;
+      this.showNotification(`❌ ${errorMsg}`, 'error');
+      return { success: false, error: errorMsg };
+    }
+
+    try {
+      const resolvedVersion = await this.resolveVersion(name, targetVersion);
+      const url = this.buildUrl(provider, name, resolvedVersion, type === 'esm' ? 'js' : type);
+      
+      let result: ImportResult;
+      if (type === 'css') {
+        result = await this.loadCSS(url);
+      } else if (type === 'esm') {
+        result = await this.loadESM(url);
+      } else {
+        result = await this.loadScript(url);
+      }
+
+      if (result.success) {
+        this.showNotification(`✅ Loaded ${name}@${resolvedVersion} from ${provider.name} (${type.toUpperCase()})`);
+        return { ...result, provider: provider.name };
+      } else {
+        this.showNotification(`❌ Failed to load ${name}@${resolvedVersion} from ${provider.name}`, 'error');
+        return result;
+      }
+    } catch (error) {
+      const errorMsg = `Failed to load ${name}@${targetVersion} from ${provider.name}: ${error}`;
+      this.showNotification(`❌ ${errorMsg}`, 'error');
+      return { success: false, error: errorMsg };
+    }
+  }
+
   async import(packageStr: string, version?: string): Promise<ImportResult> {
     const { name, version: parsedVersion } = this.parsePackage(packageStr);
     const targetVersion = version || parsedVersion || 'latest';

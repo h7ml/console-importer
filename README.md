@@ -188,6 +188,31 @@ var option = {
 myChart.setOption(option);
 ```
 
+#### CDN-Specific Imports
+
+```javascript
+// Import from specific CDN providers
+await $i.jsdelivr('lodash')         // From jsDelivr
+await $i.unpkg('react@18.0.0')      // From unpkg
+await $i.skypack('lit')             // From Skypack
+await $i.esm('vue')                 // From esm.sh (existing method)
+
+// CDN-specific CSS imports
+await $i.jsdelivr.css('bootstrap')
+await $i.unpkg.css('animate.css@4.1.1')
+
+// CDN-specific ESM imports (if supported)
+await $i.skypack.esm('lit-element')
+await $i.jsdelivr.esm('react')
+
+// Chinese CDN examples
+await $i.bootcdn('jquery')          // From BootCDN
+await $i.bytedancecdn('vue')        // From ByteDance CDN
+
+// Custom CDN (if configured)
+await $i.custom1('my-package')
+```
+
 #### Other Popular Libraries
 
 ```javascript
@@ -398,6 +423,40 @@ Show help information.
 Show current configuration and debug info.
 
 **Returns:** void
+
+### CDN-Specific Methods
+
+Each enabled CDN provider automatically gets its own methods:
+
+#### `$i.providerName(package, version?)`
+Import from a specific CDN provider.
+
+**Parameters:**
+- `package` (string): Package name
+- `version` (string, optional): Version
+
+**Returns:** Promise<ImportResult>
+
+**Examples:**
+```javascript
+await $i.jsdelivr('lodash')       // From jsDelivr
+await $i.unpkg('react', '18.0.0') // From unpkg
+await $i.skypack('lit')           // From Skypack
+```
+
+#### `$i.providerName.css(package, version?)`
+Import CSS from a specific CDN provider.
+
+#### `$i.providerName.esm(package, version?)`
+Import as ES module from a specific CDN provider (if supported).
+
+**Available methods depend on your configured providers:**
+- `$i.jsdelivr()`, `$i.jsdelivr.css()`, `$i.jsdelivr.esm()`
+- `$i.unpkg()`, `$i.unpkg.css()`, `$i.unpkg.esm()`  
+- `$i.skypack()`, `$i.skypack.css()`, `$i.skypack.esm()`
+- `$i.bootcdn()`, `$i.bootcdn.css()` (China)
+- `$i.bytedancecdn()`, `$i.bytedancecdn.css()` (China)
+- Custom provider methods based on configuration
 
 ## 🤝 Contributing
 

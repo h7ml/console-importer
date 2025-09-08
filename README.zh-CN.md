@@ -188,6 +188,32 @@ var option = {
 myChart.setOption(option);
 ```
 
+#### 指定 CDN 源导入
+
+```javascript
+// 从指定 CDN 提供商导入
+await $i.jsdelivr('lodash')         // 从 jsDelivr 导入
+await $i.unpkg('react@18.0.0')      // 从 unpkg 导入
+await $i.skypack('lit')             // 从 Skypack 导入
+await $i.esm('vue')                 // 从 esm.sh 导入（现有方法）
+
+// CDN 特定 CSS 导入
+await $i.jsdelivr.css('bootstrap')
+await $i.unpkg.css('animate.css@4.1.1')
+
+// CDN 特定 ESM 导入（如果支持）
+await $i.skypack.esm('lit-element')
+await $i.jsdelivr.esm('react')
+
+// 中国 CDN 示例
+await $i.bootcdn('jquery')          // 从 BootCDN 导入
+await $i.bytedancecdn('vue')        // 从 字节跳动 CDN 导入
+await $i.staticfile('lodash')       // 从 七牛云 CDN 导入
+
+// 自定义 CDN（如果配置了）
+await $i.custom1('my-package')
+```
+
 #### 其他流行库示例
 
 ```javascript
@@ -398,6 +424,41 @@ const versions = await $i.versions('lodash')
 显示当前配置和调试信息。
 
 **返回：** void
+
+### CDN 特定方法
+
+每个启用的 CDN 提供商都会自动获得自己的方法：
+
+#### `$i.提供商名(package, version?)`
+从指定 CDN 提供商导入。
+
+**参数：**
+- `package` (string)：包名
+- `version` (string, 可选)：版本
+
+**返回：** Promise<ImportResult>
+
+**示例：**
+```javascript
+await $i.jsdelivr('lodash')       // 从 jsDelivr 导入
+await $i.unpkg('react', '18.0.0') // 从 unpkg 导入
+await $i.skypack('lit')           // 从 Skypack 导入
+```
+
+#### `$i.提供商名.css(package, version?)`
+从指定 CDN 提供商导入 CSS。
+
+#### `$i.提供商名.esm(package, version?)`
+从指定 CDN 提供商作为 ES 模块导入（如果支持）。
+
+**可用方法取决于您配置的提供商：**
+- `$i.jsdelivr()`, `$i.jsdelivr.css()`, `$i.jsdelivr.esm()`
+- `$i.unpkg()`, `$i.unpkg.css()`, `$i.unpkg.esm()`  
+- `$i.skypack()`, `$i.skypack.css()`, `$i.skypack.esm()`
+- `$i.bootcdn()`, `$i.bootcdn.css()` (中国)
+- `$i.bytedancecdn()`, `$i.bytedancecdn.css()` (中国)
+- `$i.staticfile()`, `$i.staticfile.css()` (中国)
+- 基于配置的自定义提供商方法
 
 ## 🤝 贡献
 

@@ -101,6 +101,8 @@ The extension supports English and Chinese through:
 
 4. **Provider Priority**: Users can drag-to-reorder CDN providers in the options page. The order determines the fallback sequence.
 
+5. **CDN-Specific Methods**: The system dynamically creates methods for each enabled CDN provider (e.g., `$i.jsdelivr()`, `$i.unpkg.css()`, `$i.skypack.esm()`). Method names are normalized from provider names by removing special characters and converting to lowercase.
+
 ## Testing Changes
 
 When testing the extension:
@@ -109,6 +111,8 @@ When testing the extension:
 3. Click "Reload" on the Console Importer extension
 4. Open any webpage and check the console for "[Console Importer] Ready!" message
 5. Test with commands like `$i('lodash')` or `$i.help()`
+6. Test CDN-specific methods like `$i.jsdelivr('jquery')` or `$i.unpkg.css('bootstrap')`
+7. Use `$i.debug()` to see current configuration and available methods
 
 ## Common Issues
 

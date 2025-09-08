@@ -18,9 +18,11 @@
       .filter((p) => p.enabled)
       .sort((a, b) => a.priority - b.priority)
       .map((p) => ({
-        url: p.jsTemplate,
+        id: p.id,
         name: p.name,
+        url: p.jsTemplate,
         cssUrl: p.cssTemplate,
+        supportESM: p.supportESM,
       }));
 
     console.log('[Console Importer] Enabled providers:', enabledProviders);
@@ -30,29 +32,95 @@
       console.log('[Console Importer] No enabled providers, using defaults');
       return [
         {
-          url: 'https://cdn.jsdelivr.net/npm/{package}@{version}',
+          id: 'jsdelivr',
           name: 'jsDelivr',
+          url: 'https://cdn.jsdelivr.net/npm/{package}@{version}',
           cssUrl: 'https://cdn.jsdelivr.net/npm/{package}@{version}',
+          supportESM: true,
         },
         {
-          url: 'https://unpkg.com/{package}@{version}',
+          id: 'unpkg',
           name: 'unpkg',
+          url: 'https://unpkg.com/{package}@{version}',
           cssUrl: 'https://unpkg.com/{package}@{version}',
+          supportESM: true,
         },
         {
-          url: 'https://esm.sh/{package}@{version}',
+          id: 'esm',
           name: 'esm.sh',
+          url: 'https://esm.sh/{package}@{version}',
           cssUrl: 'https://esm.sh/{package}@{version}',
+          supportESM: true,
         },
         {
-          url: 'https://cdn.skypack.dev/{package}@{version}',
+          id: 'skypack',
           name: 'Skypack',
+          url: 'https://cdn.skypack.dev/{package}@{version}',
           cssUrl: 'https://cdn.skypack.dev/{package}@{version}',
+          supportESM: true,
         },
       ];
     }
 
     return enabledProviders;
+  };
+
+  // 从指定提供商导入
+  const importFromProvider = async (providerId, packageStr, version, type = 'js') => {
+    const { name, version: parsedVersion } = consoleImporter.parsePackage(packageStr);
+    const targetVersion = version || parsedVersion || 'latest';
+    const providers = getEnabledProviders();
+    
+    const provider = providers.find(p => 
+      p.id === providerId || 
+      p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === providerId.toLowerCase()
+    );
+    
+    if (!provider) {
+      const errorMsg = `❌ Provider '${providerId}' not found or not enabled`;
+      console.error(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    
+    // 检查 ESM 支持
+    if (type === 'esm' && !provider.supportESM) {
+      const errorMsg = `❌ Provider '${provider.name}' does not support ESM`;
+      console.error(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    
+    const resolvedVersion = await consoleImporter.resolveVersion(name, targetVersion);
+    const template = type === 'css' ? provider.cssUrl : provider.url;
+    const url = consoleImporter.buildUrl(template, name, resolvedVersion);
+    
+    try {
+      let result;
+      if (type === 'css') {
+        result = await consoleImporter.loadCSS(url);
+      } else if (type === 'esm') {
+        result = await consoleImporter.loadESM(url);
+      } else {
+        result = await consoleImporter.loadScript(url);
+      }
+      
+      if (result.success) {
+        console.log(`✅ Loaded ${name}@${resolvedVersion} from ${provider.name} (${type.toUpperCase()})`);
+        console.log(`   URL: ${url}`);
+        return { ...result, version: resolvedVersion, provider: provider.name };
+      } else {
+        console.error(`❌ Failed to load ${name}@${resolvedVersion} from ${provider.name}`);
+        return result;
+      }
+    } catch (error) {
+      const errorMsg = `❌ Failed to load ${name}@${resolvedVersion} from ${provider.name}: ${error.message}`;
+      console.error(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  // 生成规范化的方法名
+  const normalizeMethodName = (name) => {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '');
   };
 
   // 获取 ESM 提供商
@@ -307,6 +375,15 @@
 
   // 帮助信息
   $i.help = function () {
+    const cdnMethodsHelp = cdnMethods.map(m => {
+      const methods = [`  $i.${m.methodName}('package')          // From ${m.provider}`];
+      methods.push(`  $i.${m.methodName}.css('package')     // CSS from ${m.provider}`);
+      if (m.hasESM) {
+        methods.push(`  $i.${m.methodName}.esm('package')     // ESM from ${m.provider}`);
+      }
+      return methods.join('\n');
+    }).join('\n');
+    
     console.log(`
 🚀 Console Importer v1.0.0
 
@@ -319,6 +396,9 @@ Advanced Usage:
   $i.esm('react')                 // Import as ES module
   $i.css('bootstrap')             // Import CSS
   
+CDN-Specific Usage:
+${cdnMethodsHelp}
+
 Search & Discovery:
   $i.search('react')              // Search npm packages
   $i.versions('lodash')           // List available versions
@@ -337,6 +417,9 @@ Examples:
   $i.css('bootstrap@5.3.0')       // Load CSS
   $i.search('vue')                // Search for Vue packages
   $i.versions('react')            // Show React versions
+  $i.jsdelivr('axios')            // Load from jsDelivr specifically
+  $i.unpkg.css('animate.css')     // Load CSS from unpkg
+  $i.skypack.esm('lit-element')   // Load ESM from Skypack
     `);
   };
 
@@ -352,6 +435,46 @@ Examples:
     console.log('- Providers:', providers);
     console.log('- Enabled providers:', getEnabledProviders());
   };
+
+  // 动态创建 CDN 特定方法
+  const createProviderMethods = () => {
+    const availableProviders = getEnabledProviders();
+    const createdMethods = [];
+    
+    availableProviders.forEach(provider => {
+      const methodName = normalizeMethodName(provider.name);
+      const providerId = provider.id;
+      
+      // 主方法 (JS 导入)
+      $i[methodName] = async (packageStr, version) => {
+        return await importFromProvider(providerId, packageStr, version, 'js');
+      };
+      
+      // CSS 导入方法
+      $i[methodName].css = async (packageStr, version) => {
+        return await importFromProvider(providerId, packageStr, version, 'css');
+      };
+      
+      // ESM 导入方法（仅支持 ESM 的提供商）
+      if (provider.supportESM) {
+        $i[methodName].esm = async (packageStr, version) => {
+          return await importFromProvider(providerId, packageStr, version, 'esm');
+        };
+      }
+      
+      createdMethods.push({
+        provider: provider.name,
+        methodName: methodName,
+        hasESM: provider.supportESM
+      });
+    });
+    
+    console.log('[Console Importer] Created CDN-specific methods:', createdMethods);
+    return createdMethods;
+  };
+
+  // 创建 CDN 方法
+  const cdnMethods = createProviderMethods();
 
   // 注入到全局
   if (window.$i) {
